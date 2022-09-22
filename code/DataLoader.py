@@ -126,3 +126,53 @@ class ImageLoader(Dataset):
         img.sub_(mean[:, None, None]).div_(std[:, None, None])
 
         return img
+    
+    
+############################################ For Train ############################################
+
+class ImageLoaderForTrain(Dataset):
+    def __init__(self, arg, data, img_size=256, aug=False):
+
+        self.df = data
+        self.img_size = img_size
+        self.aug = aug
+
+        self.img = []
+
+        for i in range(len(self.df)):
+            img_path_lb = Path(arg.im_path, self.df["filename_lb"].iloc[i])
+            img_path_curr = Path(arg.im_path, self.df["filename_curr"].iloc[i])
+            img_path_ub = Path(arg.im_path, self.df["filename_ub"].iloc[i])
+            self.img.append([str(img_path_lb), str(img_path_curr), str(img_path_ub)])
+            
+
+    def __len__(self):
+        return len(self.img)
+
+    def __getitem__(self, idx):
+        img_path = self.img[idx]
+        
+        all_img = []
+        for img_p in img_path:
+            img = Image.open(str(img_p))
+            img = img.resize((self.img_size, self.img_size))
+            all_img.append(img)
+        
+        if self.aug == False:
+            all_img[0] = ImgAugTransform_Test(all_img[0]).astype(np.float32) / 255.
+            all_img[1] = ImgAugTransform_Test(all_img[1]).astype(np.float32) / 255.
+            all_img[2] = ImgAugTransform_Test(all_img[2]).astype(np.float32) / 255.
+        else:
+            all_img[0] = ImgAugTransform_Test_Aug(all_img[0]).astype(np.float32) / 255.
+            all_img[1] = ImgAugTransform_Test_Aug(all_img[1]).astype(np.float32) / 255.
+            all_img[2] = ImgAugTransform_Test_Aug(all_img[2]).astype(np.float32) / 255.
+        
+        all_img = np.array(all_img)
+        all_img = torch.from_numpy(np.transpose(all_img, (0, 3, 1, 2)))
+
+        dtype = all_img.dtype
+        mean = torch.as_tensor(imagenet_stats['mean'], dtype=dtype, device=all_img.device)
+        std = torch.as_tensor(imagenet_stats['mean'], dtype=dtype, device=all_img.device)
+        all_img.sub_(mean[:, None, None]).div_(std[:, None, None])
+
+        return all_img, self.df['p_rank'][idx]
