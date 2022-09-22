@@ -48,6 +48,10 @@ class Global_Regressor(nn.Module):
         self.avg_pool = nn.AvgPool2d(kernel_size=7)
         self.regressor = Regressor(1536, 512)
 
+        # freeze vgg16
+        for param in self.encoder.parameters():
+            param.require_grad = False
+
     def forward_siamese(self, x):
         x = self.encoder.features.stage1(x)
         x = self.encoder.features.stage2(x)

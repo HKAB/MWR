@@ -25,7 +25,8 @@ if __name__ == '__main__':
     sample_per_age = args.sample_per_age
 
     # Assume we have all the age in min-max range
-    for lb in tqdm(range(min_age, max_age + 1)):
+    # only go to max_age instead of max_age + 1 because the denominator of p-rank will be zero
+    for lb in tqdm(range(min_age, max_age)):
         ub = min(max_age, lb + tau)
         
         min_age_candidate = train_df[train_df['age'] == lb]
@@ -69,5 +70,5 @@ if __name__ == '__main__':
     all_df['filename_ub'] = all_df['filename_ub'] + ".chip.jpg"
 
     all_df.to_csv('pregressor_train_data.csv', index=False)
-    print('Complete!')
+    print(f'Complete! {len(all_df) was generated}')
 

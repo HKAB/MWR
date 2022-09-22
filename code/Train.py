@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
 	img_df = pd.read_csv(args.image_triplet_csv)
 
-	if (args.test_train)
+	if (args.test_train):
 		img_df = img_df.head(10)
 
 	train_df, val_df = train_test_split(img_df, test_size=0.2, stratify=img_df['p_rank'])
