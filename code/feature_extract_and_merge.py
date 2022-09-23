@@ -65,6 +65,6 @@ if __name__ == '__main__':
 	print("=> loaded checkpoint '{}'".format(initial_model))
 
 	# in local regression setting, features have shape: (n.o local regressor, n.o images, 512)
-	features = feature_extraction_local_regression(arg, train_data, test_data, model, device)
+	features = feature_extraction_local_regression(args, train_data, test_data, model, device)
 	np.savez_compressed(f"./train_feature_{args.start}_{args.start + args.number_of_sample_process}.npz", train=features['train'])
 	np.savez_compressed(f"./test_feature_{args.start}_{args.start + args.number_of_sample_process}.npz", train=features['test'])

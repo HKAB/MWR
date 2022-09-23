@@ -4,7 +4,7 @@ from DataSelector import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-# Usage: python op.py --dataset utk --regression global --experiment_setting coral --im_path ../../UTKFace --ckpt ../ckpt --data_path ../datalist
+# Usage: python op.py --dataset utk --regression global --experiment_setting coral --im_path ../../UTKFace --ckpt ../ckpt --data_path ../datalist --reference_features_path 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -23,6 +23,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, default='datalist')
     parser.add_argument('--im_path', type=str)
     parser.add_argument('--reference_list_path', type=str, default='../datalist/utk/utk_coral_sampled_5p.csv')
+    parser.add_argument('--reference_features_path', type=str)
+    
     args = parser.parse_args()
 
     torch.multiprocessing.freeze_support()

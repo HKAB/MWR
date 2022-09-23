@@ -44,6 +44,13 @@ def feature_extraction_local_regression(arg, train_data, test_data, model, devic
 
     features = {'train': [[] for _ in range(arg.reg_num)], 'test': [[] for _ in range(arg.reg_num)]}
 
+    if (arg.reference_features_path):
+        features = {
+                    'train': np.load(os.path.join(arg.reference_features_path, "train_features.np")), 
+                    'test': np.load(os.path.join(arg.reference_features_path, "test_features.np"))
+                    }
+        return features
+
     batch_size = 50
 
     Images_train = ImageLoader(arg, train_data)
