@@ -4,6 +4,8 @@ from DataSelector import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+# Usage: python op.py --dataset utk --regression global --experiment_setting coral --im_path ../../UTKFace --ckpt ../ckpt --data_path ../datalist
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=int, default=0)
@@ -47,7 +49,7 @@ if __name__ == '__main__':
     elif args.regression == 'local':
         args.backbone = 'Local_Regressor'
 
-    for fold in range(5):
+    for fold in range(1):
 
         args.fold = fold
 
