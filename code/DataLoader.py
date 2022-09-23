@@ -101,7 +101,7 @@ class ImageLoader(Dataset):
         self.img = []
 
         for i in range(len(self.df)):
-            img_path = Path(arg.im_path, self.df['database'].iloc[i], self.df["filename"].iloc[i])
+            img_path = Path(arg.im_path, self.df["filename"].iloc[i])
             self.img.append(str(img_path))
 
     def __len__(self):

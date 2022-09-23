@@ -22,6 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_dir', type=str, default='ckpt')
     parser.add_argument('--data_path', type=str, default='datalist')
     parser.add_argument('--im_path', type=str)
+    parser.add_argument('--reference_list_path', type=str, default='../datalist/utk/utk_coral_sampled_5p.csv')
     args = parser.parse_args()
 
     torch.multiprocessing.freeze_support()

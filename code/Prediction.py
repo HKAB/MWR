@@ -15,7 +15,7 @@ def global_regression(arg, train_data, test_data, sampling=False, sample_rate=1)
     model.to(device)
 
     initial_model = os.path.join(arg.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s.pth'%
-                                 (str(arg.dataset).upper(), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+                                 (str(arg.dataset), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
     print(initial_model)
 
     ### Load network parameters ###
@@ -31,8 +31,10 @@ def global_regression(arg, train_data, test_data, sampling=False, sample_rate=1)
     ### Designate save path ###
     if sampling is True:
 
-        train_data_sampled_path = os.path.join(arg.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s_global_sampled.csv'%
-                                     (str(arg.dataset).upper(), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+        # consider using: /content/utk_coral_global_sampled.csv as original global sample contains missing files
+        # train_data_sampled_path = os.path.join(arg.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s_global_sampled.csv'%
+        #                              (str(arg.dataset), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+        train_data_sampled_path = os.path.join(arg.reference_list_path)
 
         if os.path.exists(train_data_sampled_path) is False:
 
@@ -68,17 +70,17 @@ def global_regression(arg, train_data, test_data, sampling=False, sample_rate=1)
         train_data['age'] = train_data['age'].to_numpy().astype('int')
 
         save_path = os.path.join(arg.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s_loss_total_sampled.npy'%
-                                 (str(arg.dataset).upper(), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+                                 (str(arg.dataset), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
 
         save_results_path = os.path.join(arg.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s_global_top1_results_sampled.txt'%
-                                 (str(arg.dataset).upper(), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+                                 (str(arg.dataset), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
 
     else:
         save_path = os.path.join(arg.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s_loss_total.npy' % (
-        str(arg.dataset).upper(), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+        str(arg.dataset), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
 
         save_results_path = os.path.join(arg.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s_global_top1_results.txt' % (
-        str(arg.dataset).upper(), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+        str(arg.dataset), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
 
     ### Get features ###
     features = feature_extraction_global_regression(arg, train_data, test_data, model, device)
@@ -131,8 +133,9 @@ def local_regression(arg, train_data, test_data, pth_path, en_single_results, re
     ### Designate save path ###
     if sampling is True:
 
-        train_data_sampled_path = os.path.join(arg.ckpt_dir, 'local', '%s/%s/fold%d/%s_%s_sampled_5p.csv' % (
-            str(arg.dataset).upper(), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+        # train_data_sampled_path = os.path.join(arg.ckpt_dir, 'local', '%s/%s/fold%d/%s_%s_sampled_5p.csv' % (
+        #     str(arg.dataset), arg.experiment_setting, arg.fold, arg.dataset, arg.experiment_setting))
+        train_data_sampled_path = os.path.join(arg.reference_list_path)
 
         if os.path.exists(train_data_sampled_path) is False:
 

@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+# p_Regressor evaluation
 # Usage: python Evaluation.py --image_triplet_csv pregressor_train_data.csv --im_path ../../UTKFace --regression global --ckpt ../ckpt/global/utk/coral/fold0/utk_coral.pth --testing 1
 
 if __name__ == '__main__':

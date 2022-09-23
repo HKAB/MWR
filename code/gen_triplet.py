@@ -70,5 +70,5 @@ if __name__ == '__main__':
     all_df['filename_ub'] = all_df['filename_ub'] + ".chip.jpg"
 
     all_df.to_csv('pregressor_train_data.csv', index=False)
-    print(f'Complete! {len(all_df) was generated}')
+    print(f'Complete! {len(all_df)} was generated')
 
