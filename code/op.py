@@ -80,7 +80,7 @@ if __name__ == '__main__':
                                             (str(args.dataset).upper(), args.experiment_setting, args.fold, args.dataset, args.experiment_setting))
             else:
                 results_path = os.path.join(args.ckpt_dir, 'global', '%s/%s/fold%d/%s_%s_global_top1_results_sampled.txt' %
-                                                (str(args.dataset).upper(), args.experiment_setting, args.fold, args.dataset, args.experiment_setting))
+                                                (str(args.dataset), args.experiment_setting, args.fold, args.dataset, args.experiment_setting))
 
             print('Global Result: ', results_path)
             results = pd.read_csv(results_path, header=None)

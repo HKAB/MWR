@@ -173,20 +173,10 @@ def select_random_reference_local_regression(arg, train_data, pair_idx, reg_boun
                 idx = train_data.loc[np.array(train_data['age']).astype('int') == i].index.to_numpy()
 
                 if len(ref_image) > 0:
-                    # # idx can be array, so loss_tmp has size of sum of all age_y2 loss belong to idx
-                    # loss_tmp = np.array(loss[r][idx].tolist()).flatten().tolist()
-
-                    # if len(loss_tmp) < limit:
-                    #     idx_tmp = np.random.choice(np.arange(len(loss_tmp)), limit)
-                    # else:
-                    #     idx_tmp = np.argsort(loss_tmp)[:limit] # get only 1
-
-                    # row, column = idx_tmp // len(np.array(loss[r])[idx[0]]), idx_tmp % len(np.array(loss[r])[idx[0]])
-                    # # row*len(loss[r])[idx[0]]) + column = idx_tmp
-                    # # all loss[r][[index1, index2]] has the same size because they have the same age
-                    y_1_idx_tmp, y_2_idx_tmp = np.random.choice(idx, 1), np.array(pair_idx[r])[idx[0]][column]
-                    y_1_idx_tmp, y_2_idx_tmp = idx[row], np.random.choice(np.array(pair_idx[r])[idx[row]], 1)
-                    # idx[row] or idx[0] has the same result? because of the same age_y2?
+                    y_1_idx_tmp = np.random.choice(idx, 1)
+                    y_2_idx_tmp = np.random.choice(np.array(pair_idx[r])[y_1_idx_tmp][0], 1)
+                    # np.array(pair_idx[r])[y_1_idx_tmp][0] here because np.array(pair_idx[r])[y_1_idx_tmp]
+                    # return a list of array
                     refer_idx[r].append(y_1_idx_tmp.tolist())
                     refer_pair_idx[r].append(y_2_idx_tmp.tolist())
 

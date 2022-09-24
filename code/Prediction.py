@@ -120,7 +120,7 @@ def local_regression(arg, train_data, test_data, pth_path, en_single_results, re
     model.to(device)
 
     ### Load network parameters ###
-    initial_model = os.path.join(pth_path, '%s_%s_local.pth'%(arg.dataset, arg.experiment_setting.lower()))
+    initial_model = os.path.join(pth_path, '%s_%s_local.pth'%(str(arg.dataset).upper(), arg.experiment_setting.lower()))
 
     checkpoint = torch.load(initial_model, map_location=device)
     model_dict = model.state_dict()
@@ -181,19 +181,7 @@ def local_regression(arg, train_data, test_data, pth_path, en_single_results, re
         save_path = os.path.join(arg.ckpt_dir, arg.experiment_title, 'fold%d' % (arg.fold), 'loss_total_sampled_5p.npy')
     print('save path: ', save_path)
 
-    ### Get regression error ###
-    # if os.path.isfile(save_path) == True:
-    #     # We dont wanna change the directory, so load = False here
-    #     loss_total, index_y2_total = get_best_pairs_local_regression(arg, train_data, train_data, features, reg_bound, model, device, False)
-    #     # loss_total = np.load(save_path, allow_pickle=True)
-    #     # loss_total: (5, total image) -> each image has a list with size n.o age_y2 whose value is the loss of test_age
-    #     # index_y2_total: (5, total image) -> each image has a list with size n.o age_y2 whose value is the index of test_age
-    # else:
-    #     loss_total, index_y2_total = get_best_pairs_local_regression(arg, train_data, train_data, features, reg_bound, model, device, False)
-    #     np.save(save_path, loss_total)
-
-    # ### Get best reference pairs ###
-    # refer_idx, refer_idx_pair = select_reference_local_regression(arg, train_data, index_y2_total, np.array(loss_total), reg_bound, limit=ref_num)
+    ### Get random pairs ###
     index_y2_total = get_random_pairs_local_regression(arg, train_data, reg_bound)
     refer_idx, refer_idx_pair = select_random_reference_local_regression(arg, train_data, index_y2_total, reg_bound, limit=ref_num)
 
