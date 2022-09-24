@@ -129,17 +129,64 @@ def select_reference_local_regression(arg, train_data, pair_idx, loss, reg_bound
                 idx = train_data.loc[np.array(train_data['age']).astype('int') == i].index.to_numpy()
 
                 if len(ref_image) > 0:
+                    # idx can be array, so loss_tmp has size of sum of all age_y2 loss belong to idx
                     loss_tmp = np.array(loss[r][idx].tolist()).flatten().tolist()
 
                     if len(loss_tmp) < limit:
                         idx_tmp = np.random.choice(np.arange(len(loss_tmp)), limit)
                     else:
-                        idx_tmp = np.argsort(loss_tmp)[:limit]
+                        idx_tmp = np.argsort(loss_tmp)[:limit] # get only 1
 
                     row, column = idx_tmp // len(np.array(loss[r])[idx[0]]), idx_tmp % len(np.array(loss[r])[idx[0]])
-
+                    # row*len(loss[r])[idx[0]]) + column = idx_tmp
+                    # all loss[r][[index1, index2]] has the same size because they have the same age
                     y_1_idx_tmp, y_2_idx_tmp = idx[row], np.array(pair_idx[r])[idx[0]][column]
 
+                    refer_idx[r].append(y_1_idx_tmp.tolist())
+                    refer_pair_idx[r].append(y_2_idx_tmp.tolist())
+
+                else:
+                    refer_idx[r].append([])
+                    refer_pair_idx[r].append([])
+
+            else:
+                refer_idx[r].append([])
+                refer_pair_idx[r].append([])
+
+    return refer_idx, refer_pair_idx
+
+
+######################### Local Reference Selection #########################
+def select_random_reference_local_regression(arg, train_data, pair_idx, reg_bound, limit=5):
+    # ref vector
+    refer_idx, refer_pair_idx = [[] for _ in range(len(reg_bound))], [[] for _ in range(len(reg_bound))]
+
+    data_age = np.array(train_data['age']).astype('int')
+    data_age_max = data_age.max()
+    lb_list, up_list = get_age_bounds(int(data_age_max), np.unique(data_age), arg.tau)
+
+    for i in range(90):
+        for r in range(len(reg_bound)):
+            if (i >= lb_list[reg_bound[r][0]]) and (i <= reg_bound[r][1]):
+
+                ref_image = train_data.loc[np.array(train_data['age']).astype('int') == i]
+                idx = train_data.loc[np.array(train_data['age']).astype('int') == i].index.to_numpy()
+
+                if len(ref_image) > 0:
+                    # # idx can be array, so loss_tmp has size of sum of all age_y2 loss belong to idx
+                    # loss_tmp = np.array(loss[r][idx].tolist()).flatten().tolist()
+
+                    # if len(loss_tmp) < limit:
+                    #     idx_tmp = np.random.choice(np.arange(len(loss_tmp)), limit)
+                    # else:
+                    #     idx_tmp = np.argsort(loss_tmp)[:limit] # get only 1
+
+                    # row, column = idx_tmp // len(np.array(loss[r])[idx[0]]), idx_tmp % len(np.array(loss[r])[idx[0]])
+                    # # row*len(loss[r])[idx[0]]) + column = idx_tmp
+                    # # all loss[r][[index1, index2]] has the same size because they have the same age
+                    y_1_idx_tmp, y_2_idx_tmp = np.random.choice(idx, 1), np.array(pair_idx[r])[idx[0]][column]
+                    y_1_idx_tmp, y_2_idx_tmp = idx[row], np.random.choice(np.array(pair_idx[r])[idx[row]], 1)
+                    # idx[row] or idx[0] has the same result? because of the same age_y2?
                     refer_idx[r].append(y_1_idx_tmp.tolist())
                     refer_pair_idx[r].append(y_2_idx_tmp.tolist())
 
@@ -240,12 +287,15 @@ def get_best_pairs_local_regression(arg, train_data, test_data, features, reg_bo
         for r in range(len(reg_bound)):
             if (age_y1 >= lb_list[reg_bound[r][0]]) and (age_y1 <= reg_bound[r][1]):
 
+                # age_y1, age_y2 are lb and ub ages
+
                 max_age = reg_bound[r][1] + 6
                 min_age = reg_bound[r][0] - 6
 
                 age_y2 = up_list[age_y1]
                 index_y2 = np.where(data_age == age_y2)[0]
                 index_y2_total[r].append(index_y2)
+                # index_test: get all ages in between
                 index_test = np.where((data_test_age >= (max(age_y1 - 6, min_age))) & (data_test_age <= (min(age_y2 + 6, max_age))))[0]
 
                 loss_tmp = []
@@ -285,6 +335,31 @@ def get_best_pairs_local_regression(arg, train_data, test_data, features, reg_bo
                 index_y2_total[r].append([])
 
     return loss_total, index_y2_total
+
+def get_random_pairs_local_regression(arg, train_data, reg_bound):
+
+    data_age_max = int(train_data['age'].max())
+    data_age = train_data['age'].to_numpy().astype('int')
+    lb_list, up_list = get_age_bounds(int(data_age_max), np.unique(data_age), arg.tau)
+
+    loss_total = [[] for _ in range(len(reg_bound))]
+    index_y2_total = [[] for _ in range(len(reg_bound))]
+
+    for i, age_y1 in enumerate(tqdm(data_age)):
+        for r in range(len(reg_bound)):
+            if (age_y1 >= lb_list[reg_bound[r][0]]) and (age_y1 <= reg_bound[r][1]):
+                # age_y1, age_y2 are lb and ub ages
+
+                age_y2 = up_list[age_y1]
+                index_y2 = np.where(data_age == age_y2)[0]
+                index_y2_total[r].append(index_y2)
+                # index_test: get all ages in between
+
+            else:
+                loss_total[r].append([])
+                index_y2_total[r].append([])
+
+    return index_y2_total
 
 ######################### MWR ########################
 def initial_prediction(train_data, test_data, features, n_neighbors):
