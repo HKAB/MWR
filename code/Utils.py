@@ -2,6 +2,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from DataLoader import *
 import os
+import torch
 
 ######################### Feature Extraction #########################
 
@@ -567,7 +568,7 @@ def MWR_local_regression(arg, train_data, test_data, features, refer_idx, refer_
 
 
 
-def MWR_weight_local_regression(arg, train_data, test_data, features, refer_idx, refer_idx_pair, global_prediction, reg_bobund, model, weight, device):
+def MWR_weight_local_regression(arg, train_data, test_data, features, refer_idx, refer_idx_pair, global_prediction, reg_bound, model, weight, device):
     pred_age_final = []
     train_data_age_unique = np.unique(train_data['age'])
     train_data_age_total = train_data['age'].to_numpy().reshape(-1)
@@ -605,18 +606,21 @@ def MWR_weight_local_regression(arg, train_data, test_data, features, refer_idx,
 
             age = int(global_prediction[i])
             for tmp in range(arg.reg_num):
+              reg_num_list.append(tmp)
                 # if age in np.arange(reg_bound[tmp][0], reg_bound[tmp][1] + 1):
-                reg_num_list.append(tmp)
+                
 
             while True:
                 for tmp_idx, reg_num in enumerate(reg_num_list):
 
-                    if age in np.arange(reg_bound[tmp][0], reg_bound[tmp][1] + 1):
+                    if age in np.arange(reg_bound[tmp_idx][0], reg_bound[tmp_idx][1] + 1):
                         init_age = age
-                    elif (age < reg_bound[tmp][0]):
-                        init_age = reg_bound[tmp][0]
+                    # else:
+                    #     init_age = (reg_bound[tmp_idx][0] + reg_bound[tmp_idx][1])/2
+                    elif (age < reg_bound[tmp_idx][0]):
+                        init_age = reg_bound[tmp_idx][0]
                     else:
-                        init_age = reg_bound[tmp][1]
+                        init_age = reg_bound[tmp_idx][1]
 
                     lb_age = int(np.argsort(np.abs(np.log(init_age) - np.log(train_data_age_unique) - arg.tau / 2))[0])
                     lb_age = int(train_data_age_unique[lb_age])
@@ -676,16 +680,30 @@ def MWR_weight_local_regression(arg, train_data, test_data, features, refer_idx,
                     tau = abs(mean - np.log(lb_age))
 
                     refined_age_tmp = np.mean([np.exp(outputs[k] * (tau[k]) + mean[k]) for k in range(len(outputs))])
-
+                    # print(refined_age_tmp)
+                    # print(feature_1.shape)
+                    # print(feature_2.shape)
+                    # print(feature_test.shape)
+                    # print(outputs)
                     if sum(outputs == 1) == len(outputs):
                         refined_age_tmp = up_age.max()
                     if sum(outputs == -1) == len(outputs):
                         refined_age_tmp = lb_age.min()
+                    # if (sum(outputs) > 0.99):
+                    #   refined_age_tmp = up_age.max()
+                    # if (sum(outputs) < -0.99):
+                    #   refined_age_tmp = lb_age.min()
+
+                    
 
                     refine_list.append(refined_age_tmp)
 
                 # no mean
-                refined_age = (np.array(refine_list)*weight[i]).sum()
+                # print("np.array(refine_list)", np.array(refine_list))
+                # print("weight[i]", weight[i])
+                refined_age = (np.array(refine_list)*np.array(torch.nn.functional.softmax(torch.from_numpy(weight[i])))).sum()
+
+                # refined_age = np.array(refine_list).mean()
 
                 if (max_local_iter == (iteration + 1)) or (int(refined_age + 0.5) == age):
                     age = int(refined_age + 0.5)
@@ -703,7 +721,7 @@ def MWR_weight_local_regression(arg, train_data, test_data, features, refer_idx,
                     refine_list = []
 
                     for tmp in range(arg.reg_num):
-                        if age in np.arange(reg_bound[tmp][0], reg_bound[tmp][1] + 1):
+                        # if age in np.arange(reg_bound[tmp][0], reg_bound[tmp][1] + 1):
                             reg_num_list.append(tmp)
 
                     iteration += 1

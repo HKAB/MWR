@@ -187,10 +187,17 @@ def local_regression(arg, train_data, test_data, pth_path, en_single_results, re
 
     # Read weight
     weight = np.load('weight.npy')
-    weight = np.exp(weight) / np.sum(np.exp(weight), axis=0)
+    w_sm = torch.nn.functional.softmax(torch.from_numpy(weight), dim=1)
+    part = np.array([[21, 28], [24, 33], [29, 40], [34, 49], [41, 60]]) - 21
+
+    weight_c = np.zeros((weight.shape[0], 5))
+    part = np.array([[21, 28], [24, 33], [29, 40], [34, 49], [41, 60]]) - 21
+
+    for i, p in enumerate(part):
+      weight_c[:, i] = w_sm[:, p[0]:p[1] + 1].sum(axis=1)
 
     ### MWR ###
-    pred = MWR_local_regression(arg, train_data, test_data, features, refer_idx, refer_idx_pair, en_single_results, reg_bound, model, weight, device)
+    pred = MWR_weight_local_regression(arg, train_data, test_data, features, refer_idx, refer_idx_pair, en_single_results, reg_bound, model, weight_c, device)
 
     ### Viz result ###
     get_results(arg, test_data, np.array(pred))
