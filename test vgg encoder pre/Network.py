@@ -6,7 +6,8 @@ def create_model(arg, model_name):
     ### Create model ###
     if model_name == 'Global_Regressor':
         print('Get Global_Regressor')
-        model = Global_Regressor().cuda()
+        # model = Global_Regressor().cuda()
+        model = Global_Regressor()
 
     if model_name == 'Local_Regressor':
         print('Get Local_Regressor')

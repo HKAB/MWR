@@ -6,8 +6,8 @@ def create_model(arg, model_name):
     ### Create model ###
     if model_name == 'Global_Regressor':
         print('Get Global_Regressor')
-        model = Global_Regressor().cuda()
-        # model = Global_Regressor()
+        # model = Global_Regressor().cuda()
+        model = Global_Regressor()
 
     if model_name == 'Local_Regressor':
         print('Get Local_Regressor')
@@ -89,14 +89,14 @@ class Global_Regressor(nn.Module):
 
 
 class VGG_cls_pre(nn.Module):
-    def __init__(self):
+    def __init__(self, ckpt_path="utk_coral.pth"):
         super(VGG_cls_pre, self).__init__()
         self.model = create_model(None, "Global_Regressor")
-        initial_model = 'utk_coral.pth'
+        initial_model = ckpt_path
         device = torch.device("cuda:%s" % (0) if torch.cuda.is_available() else "cpu")
         checkpoint = torch.load(initial_model, map_location=device)
         model_dict = self.model.state_dict()
-
+        
         model_dict.update(checkpoint['model_state_dict'])
         self.model.load_state_dict(model_dict)
         print("=> loaded checkpoint '{}'".format(initial_model))
@@ -122,4 +122,3 @@ class VGG_cls_pre(nn.Module):
         x = self.relu2(x)
         x = self.fc3(x)
         return x
-

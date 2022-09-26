@@ -185,8 +185,12 @@ def local_regression(arg, train_data, test_data, pth_path, en_single_results, re
     index_y2_total = get_random_pairs_local_regression(arg, train_data, reg_bound)
     refer_idx, refer_idx_pair = select_random_reference_local_regression(arg, train_data, index_y2_total, reg_bound, limit=ref_num)
 
+    # Read weight
+    weight = np.load('weight.npy')
+    weight = np.exp(weight) / np.sum(np.exp(weight), axis=0)
+
     ### MWR ###
-    pred = MWR_local_regression(arg, train_data, test_data, features, refer_idx, refer_idx_pair, en_single_results, reg_bound, model, device)
+    pred = MWR_local_regression(arg, train_data, test_data, features, refer_idx, refer_idx_pair, en_single_results, reg_bound, model, weight, device)
 
     ### Viz result ###
     get_results(arg, test_data, np.array(pred))

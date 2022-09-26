@@ -563,6 +563,153 @@ def MWR_local_regression(arg, train_data, test_data, features, refer_idx, refer_
 
     return pred_age_final
 
+
+
+
+
+def MWR_weight_local_regression(arg, train_data, test_data, features, refer_idx, refer_idx_pair, global_prediction, reg_bobund, model, weight, device):
+    pred_age_final = []
+    train_data_age_unique = np.unique(train_data['age'])
+    train_data_age_total = train_data['age'].to_numpy().reshape(-1)
+
+    f_tr = torch.as_tensor(features['train']).to(device)
+    f_te = torch.as_tensor(features['test']).to(device)
+
+    lb_list_global, up_list_global = get_age_bounds(int(train_data['age'].max()), np.unique(train_data['age']), arg.tau)
+    lb_list_total, up_list_total = [], []
+    lb_list_half_total, up_list_half_total = [], []
+
+    for reg_num_tmp in range(arg.reg_num):
+        max_age = up_list_global[reg_bound[reg_num_tmp][1]]
+        min_age = lb_list_global[reg_bound[reg_num_tmp][0]]
+        train_age_list = np.where((train_data_age_total >= min_age) & (train_data_age_total <= max_age))[0]
+        train_age_list = train_data_age_total[train_age_list]
+        lb_list, up_list = get_age_bounds(int(train_age_list.max()), np.unique(train_age_list), arg.tau)
+        lb_list_half, up_list_half = get_age_bounds(int(train_age_list.max()), np.unique(train_age_list), arg.tau / 2)
+
+        lb_list_total.append(lb_list), up_list_total.append(up_list)
+        lb_list_half_total.append(lb_list_half), up_list_half_total.append(up_list_half)
+
+    with torch.no_grad():
+
+        max_local_iter = 10
+        memory = np.zeros(shape=(len(test_data), max_local_iter))
+
+        lb_final_total, up_final_total, reg_idx = [], [], []
+
+        for i in tqdm(range(0, len(test_data))):
+
+            reg_num_list = []
+            refine_list = []
+            iteration = 0
+
+            age = int(global_prediction[i])
+            for tmp in range(arg.reg_num):
+                # if age in np.arange(reg_bound[tmp][0], reg_bound[tmp][1] + 1):
+                reg_num_list.append(tmp)
+
+            while True:
+                for tmp_idx, reg_num in enumerate(reg_num_list):
+
+                    if age in np.arange(reg_bound[tmp][0], reg_bound[tmp][1] + 1):
+                        init_age = age
+                    elif (age < reg_bound[tmp][0]):
+                        init_age = reg_bound[tmp][0]
+                    else:
+                        init_age = reg_bound[tmp][1]
+
+                    lb_age = int(np.argsort(np.abs(np.log(init_age) - np.log(train_data_age_unique) - arg.tau / 2))[0])
+                    lb_age = int(train_data_age_unique[lb_age])
+                    up_age = int(up_list_total[reg_num][lb_age])
+
+                    if tmp_idx == 0:
+                        lb_final = lb_age
+                        up_final = up_age
+                        reg_idx_final = reg_num
+
+                    lb_age, up_age = np.array([lb_age]), np.array([up_age])
+
+                    invalid_lb = np.setdiff1d(lb_age, (train_data_age_unique).astype('int'), True)
+                    invalid_up = np.setdiff1d(up_age, (train_data_age_unique).astype('int'), True)
+
+                    if len(invalid_lb) != 0 or len(invalid_up) != 0:
+                        invalid_idx_lb, invalid_idx_up = [], []
+
+                        for invalid_age in invalid_lb:
+                            invalid_idx_lb.append(list(np.where(invalid_age == lb_age)[0]))
+                        for invalid_age in invalid_up:
+                            invalid_idx_up.append(list(np.where(invalid_age == up_age)[0]))
+
+                        invalid_idx = sum(invalid_idx_lb, []) + sum(invalid_idx_up, [])
+
+                        lb_age = np.delete(lb_age, invalid_idx)
+                        up_age = np.delete(up_age, invalid_idx)
+
+                    idx_1_final = [refer_idx[reg_num][lb_age[tmp]] for tmp in range(len(lb_age))]
+                    idx_2_final = [refer_idx_pair[reg_num][lb_age[tmp]] for tmp in range(len(up_age))]
+
+                    idx_1_final = np.array(sum(idx_1_final, []))
+                    idx_2_final = np.array(sum(idx_2_final, []))
+
+                    if len(idx_1_final) == 0:
+                        idx_1_final = [refer_idx[reg_num][lb_age[tmp] - 1] for tmp in range(len(lb_age))]
+                        lb_age = lb_age - 1
+                    if len(idx_2_final) == 0:
+                        idx_2_final = [refer_idx_pair[reg_num][lb_age[tmp] + 1] for tmp in range(len(up_age))]
+                        up_age = up_age + 1
+
+                    idx_1_final = np.array(idx_1_final).reshape(-1)
+                    idx_2_final = np.array(idx_2_final).reshape(-1)
+
+                    test_duplicate = [i] * len(idx_1_final)
+
+                    feature_1, feature_2, feature_test = f_tr[reg_num][idx_1_final].reshape(-1, 512, 1, 1), f_tr[reg_num][idx_2_final].reshape(-1, 512, 1, 1), \
+                                                         f_te[reg_num][test_duplicate].reshape(-1, 512, 1, 1)
+
+                    outputs = model('test', x_1_1=feature_1, x_1_2=feature_2, x_2=feature_test, idx=reg_num)
+                    outputs = outputs.squeeze().cpu().detach().numpy().reshape(-1)
+
+                    up_age = np.array([up_age[tmp].repeat(len(refer_idx_pair[reg_num][lb_age[tmp]])) for tmp in range(len(up_age))]).reshape(-1)
+                    lb_age = np.array([lb_age[tmp].repeat(len(refer_idx[reg_num][lb_age[tmp]])) for tmp in range(len(lb_age))]).reshape(-1)
+
+                    mean = (np.log(up_age) + np.log(lb_age)) / 2
+                    tau = abs(mean - np.log(lb_age))
+
+                    refined_age_tmp = np.mean([np.exp(outputs[k] * (tau[k]) + mean[k]) for k in range(len(outputs))])
+
+                    if sum(outputs == 1) == len(outputs):
+                        refined_age_tmp = up_age.max()
+                    if sum(outputs == -1) == len(outputs):
+                        refined_age_tmp = lb_age.min()
+
+                    refine_list.append(refined_age_tmp)
+
+                # no mean
+                refined_age = (np.array(refine_list)*weight[i]).sum()
+
+                if (max_local_iter == (iteration + 1)) or (int(refined_age + 0.5) == age):
+                    age = int(refined_age + 0.5)
+                    memory[i, iteration:] = age
+                    pred_age_final.append(age)
+
+                    lb_final_total.append(lb_final)
+                    up_final_total.append(up_final)
+                    reg_idx.append(reg_idx_final)
+                    break
+                else:
+                    age = int(refined_age + 0.5)
+                    memory[i, iteration] = age
+                    reg_num_list = []
+                    refine_list = []
+
+                    for tmp in range(arg.reg_num):
+                        if age in np.arange(reg_bound[tmp][0], reg_bound[tmp][1] + 1):
+                            reg_num_list.append(tmp)
+
+                    iteration += 1
+
+    return pred_age_final
+
 ######################################### Result Viz #########################################
 def get_results(arg, test_data, pred_age):
 
