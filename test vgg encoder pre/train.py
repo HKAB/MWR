@@ -4,7 +4,6 @@ from torch.nn import init
 import functools
 from torch.autograd import Variable
 import numpy as np
-from ResMaskNet import res_attention
 from DataLoader import ImageLoader_New
 from torch.utils.data import DataLoader
 from VGG_encoder import VGG_cls_pre
@@ -21,7 +20,7 @@ def train(net, criterion, optimizer, train_loader, test_loader, num_epochs=10):
     m = torch.nn.Softmax(dim=1).cuda()
 
     best_epoch = 0
-    best_val_loss = np.inf
+    best_test_loss = np.inf
 
     for epoch in range(num_epochs):
         net.train()
@@ -45,17 +44,17 @@ def train(net, criterion, optimizer, train_loader, test_loader, num_epochs=10):
             with torch.no_grad():
                 running_mae += mea_loss(apparent_age(m, outputs, age_range), labels).item()
 
-            if i % 100 == 99:
-                print('[%d, %5d] train cls loss: %.3f' % (epoch + 1, i + 1, running_loss / 100))
-                print('[%d, %5d] train mae loss: %.3f' % (epoch + 1, i + 1, running_mae / 100))
+            if i % 500 == 499:
+                print('[%d, %5d] train cls loss: %.3f' % (epoch + 1, i + 1, running_loss / 500))
+                print('[%d, %5d] train mae loss: %.3f' % (epoch + 1, i + 1, running_mae / 500))
                 running_loss = 0.0
                 running_mae = 0.0
 
-        if epoch % 3 == 0:
+        if epoch % 1 == 0:
             net.eval()
             with torch.no_grad():
-                val_loss = 0.0
-                val_mae = 0.0
+                test_loss = 0.0
+                test_mae = 0.0
                 for i, data in enumerate(test_loader, 0):
                     inputs, labels = data
                     inputs = inputs.to(device)
@@ -65,15 +64,15 @@ def train(net, criterion, optimizer, train_loader, test_loader, num_epochs=10):
                     outputs = net(inputs)
                     loss = criterion(outputs, labels2)
 
-                    val_loss += loss.item()
-                    val_mae += mea_loss(apparent_age(m, outputs, age_range), labels).item()
-            if val_loss/len(test_loader) < best_val_loss:
-                best_val_loss = val_loss
+                    test_loss += loss.item()
+                    test_mae += mea_loss(apparent_age(m, outputs, age_range), labels).item()
+            if test_loss/len(test_loader) < best_test_loss and epoch >=10:
+                best_test_loss = test_loss
                 best_epoch = epoch
                 torch.save(model.state_dict(), f"vgg_epoch_{best_epoch}.pth")
-            print('save parameters to file: %s' % "vgg.pth")
-            print('test cls loss: %.3f' % (running_loss / len(test_loader)))
-            print('test mae loss: %.3f' % (running_mae / len(test_loader)))
+                print('save parameters to file: %s' % "vgg.pth")
+            print('test cls loss: %.3f' % (test_loss / len(test_loader)))
+            print('test mae loss: %.3f' % (test_mae / len(test_loader)))
 
     print('Finished Training')
 if __name__=='__main__':
@@ -92,7 +91,7 @@ if __name__=='__main__':
     train_dataset = ImageLoader_New(train_path, img_size=224, aug=True)
     test_dataset = ImageLoader_New(test_path, img_size=224, aug=False)
 
-    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4)
     train(model, criterion, optimizer, train_loader, test_loader, num_epochs=50)
 
