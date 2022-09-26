@@ -20,6 +20,9 @@ def train(net, criterion, optimizer, train_loader, test_loader, num_epochs=10):
     age_range = torch.arange(21, 61).float().cuda()
     m = torch.nn.Softmax(dim=1).cuda()
 
+    best_epoch = 0
+    best_val_loss = np.inf
+
     for epoch in range(num_epochs):
         net.train()
         running_loss = 0.0
@@ -48,11 +51,11 @@ def train(net, criterion, optimizer, train_loader, test_loader, num_epochs=10):
                 running_loss = 0.0
                 running_mae = 0.0
 
-        if epoch % 5 == 4:
+        if epoch % 3 == 0:
             net.eval()
             with torch.no_grad():
-                running_loss = 0.0
-                running_mae = 0.0
+                val_loss = 0.0
+                val_mae = 0.0
                 for i, data in enumerate(test_loader, 0):
                     inputs, labels = data
                     inputs = inputs.to(device)
@@ -62,8 +65,13 @@ def train(net, criterion, optimizer, train_loader, test_loader, num_epochs=10):
                     outputs = net(inputs)
                     loss = criterion(outputs, labels2)
 
-                    running_loss += loss.item()
-                    running_mae += mea_loss(apparent_age(m, outputs, age_range), labels).item()
+                    val_loss += loss.item()
+                    val_mae += mea_loss(apparent_age(m, outputs, age_range), labels).item()
+            if val_loss/len(test_loader) < best_val_loss:
+                best_val_loss = val_loss
+                best_epoch = epoch
+                torch.save(model.state_dict(), f"vgg_epoch_{best_epoch}.pth")
+            print('save parameters to file: %s' % "vgg.pth")
             print('test cls loss: %.3f' % (running_loss / len(test_loader)))
             print('test mae loss: %.3f' % (running_mae / len(test_loader)))
 

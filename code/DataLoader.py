@@ -101,7 +101,7 @@ class ImageLoader(Dataset):
         self.img = []
 
         for i in range(len(self.df)):
-            img_path = Path(arg.im_path, self.df["filename"].iloc[i] + ".chip.jpg")
+            img_path = Path(arg.im_path, self.df["filename"].iloc[i])
             self.img.append(str(img_path))
 
     def __len__(self):
@@ -140,9 +140,9 @@ class ImageLoaderForTrain(Dataset):
         self.img = []
 
         for i in range(len(self.df)):
-            img_path_lb = Path(arg.im_path, self.df["filename_lb"].iloc[i] + ".chip.jpg")
-            img_path_curr = Path(arg.im_path, self.df["filename_curr"].iloc[i] + ".chip.jpg")
-            img_path_ub = Path(arg.im_path, self.df["filename_ub"].iloc[i] + ".chip.jpg")
+            img_path_lb = Path(arg.im_path, self.df["filename_lb"].iloc[i])
+            img_path_curr = Path(arg.im_path, self.df["filename_curr"].iloc[i])
+            img_path_ub = Path(arg.im_path, self.df["filename_ub"].iloc[i])
             self.img.append([str(img_path_lb), str(img_path_curr), str(img_path_ub)])
             
 
