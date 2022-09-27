@@ -161,7 +161,7 @@ def face_detect(img, thickness = 2, detector = detector, color = (255, 0, 0)):
       print('No face detect!')
       return None, None, None
     else:
-      x,y,w,h = results[0]['box']
+      x, y, w, h = results[0]['box']
       x  = int(x - 0.25*w)
       y = int(y - 0.25*h)
       if x<0:
@@ -177,6 +177,7 @@ def face_detect(img, thickness = 2, detector = detector, color = (255, 0, 0)):
 
       image = img[y: y_end, x:x_end]
       
+      thickness = int(1.5*w/80)
       image_viz = cv2.rectangle(img, (x,y), (x_end, y_end), color, thickness)
       # plt.imshow(image_viz)
       
@@ -223,19 +224,38 @@ def age_estimate(model, img_path, face_detect = face_detect, save_folder='static
       predict = model(img)
       age_predict = apparent_age(m, predict, age_range)
       age_predict = int(age_predict.detach().numpy())
-      image_viz = cv2.putText(image_viz,str(age_predict), (box[0]+int(box[2]/2)-30,box[1]+int(box[3])-50),cv2.FONT_HERSHEY_SIMPLEX,2, (255, 0, 0), 4, cv2.LINE_AA)
+
+      x1, y1, w, h = box[0], box[1], box[2], box[3]
+      # img_h, img_w, _ = image_viz.shape
+      # x1_new, y1_new, x2_new, y2_new = max(0, x1 - 40), max(0, y1 - 40), min(x2 + 40, img_w), min(y2 + 40, img_h)
+      # image_viz = image_viz[max(0, y1:y1 + h, x1:x1 + w, :]
+
+      fontScale = min(box[2],box[3])/100
+      thickness = int(box[3]/100)
+      (w_text, h_text), _ = cv2.getTextSize(
+        str(age_predict), cv2.FONT_HERSHEY_SIMPLEX, fontScale, 2)
+
+      
+      image_viz = cv2.rectangle(image_viz, (x1, y1 - h_text - 20), (x1 + w_text, y1), (0, 0, 255), -1)
+      image_viz = cv2.putText(image_viz, str(age_predict), (x1, y1 - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, fontScale, (255,255,255), 2)
+
+      
       
     #   if os.path.exists("static/image"):
     #     print("File exist")
     #     os.remove("static/image")
-      save_path = os.path.join(save_folder, str(i)+"render.jpg")
+      save_path = os.path.join(save_folder, str(i) + "render.jpg")
       i += 1
       image_viz = cv2.cvtColor(image_viz, cv2.COLOR_RGB2BGR)
       print(str(age_predict))
-    #   image_viz = cv2.resize(image_viz, (470, 470), interpolation = cv2.INTER_AREA)
+      # image_viz = cv2.resize(image_viz, (470, 470), interpolation = cv2.INTER_AREA)
       cv2.imwrite(save_path, image_viz)
       # plt.imshow(image_viz)
+      # return save_path
+
       return save_path
+
    else:
       print('Cant estimate age, an error occurs!')
       return None
@@ -254,26 +274,6 @@ def age():
     open_cv_image = open_cv_image[:, :, ::-1].copy() 
 
     path = age_estimate(model, open_cv_image)
-
-
-    # image2 = Image.fromarray(image1)
-
-#     imgByteArr = io.BytesIO()
-#   # image.save expects a file as a argument, passing a bytes io ins
-#     image2.save(imgByteArr, format=image2.format)
-#     # Turn the BytesIO object back into a bytes object
-#     imgByteArr = imgByteArr.getvalue()
-
-    # print(type(imgByteArr))
-    # im_resize = cv2.resize(image1, (500, 500))
-    # is_success, im_buf_arr = cv2.imencode(".jpg", image1)
-    # byte_im = im_buf_arr.tobytes()
-
-    # image3 = Image.open(io.BytesIO(byte_im))
-
-    # image3.show()
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
     return path
  
