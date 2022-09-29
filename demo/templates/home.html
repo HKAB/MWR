@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!-- Created By CodingNepal -->
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Age Estimation</title>
+      <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/style.css') }}">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+   </head>
+   <body>
+        <h1 align="center">
+            Age Estimation
+        </h1>
+        <!-- <img  src="static\\image\\238.jpg"> -->
+        <br></br>
+
+        <span id="name"></span>
+        <div class="container">
+         <div class="wrapper">
+            <div class="image">
+               <img  src="" alt="">
+            </div>
+            
+            <div class="content">
+               <div class="icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+               </div>
+               <div class="text">
+                  No file chosen, yet!
+               </div>
+            </div>
+            <div id="cancel-btn">
+               <i class="fas fa-times"></i>
+            </div>
+            <div class="file-name">
+               File name here
+            </div>
+         </div>
+         
+        <div> 
+        
+        <button onclick="defaultBtnActive()" id="custom-btn">Choose a file</button>
+        <input id="default-btn" type="file" hidden>
+        
+       
+        <button id="get-age" >Predict</button>
+        
+        
+
+        <script type="text/javascript">
+            
+        </script>
+
+        </div>
+      </div>
+      <script>
+         const wrapper = document.querySelector(".wrapper");
+         const fileName = document.querySelector(".file-name");
+         const defaultBtn = document.querySelector("#default-btn");
+         const customBtn = document.querySelector("#custom-btn");
+         const cancelBtn = document.querySelector("#cancel-btn i");
+         const img = document.querySelector("img");
+         let url;
+        
+         let regExp = /[0-9a-zA-Z\^\&\'\@\{\}\[\]\,\$\=\!\-\#\(\)\.\%\+\~\_ ]+$/;
+         function defaultBtnActive(){
+
+           defaultBtn.click();
+           
+         }
+         defaultBtn.addEventListener("change", function(){
+           const file = this.files[0];
+           if(file){
+             const reader = new FileReader();
+             reader.onload = function(){
+               const result = reader.result;
+               img.src = result;
+               wrapper.classList.add("active");
+             }
+             cancelBtn.addEventListener("click", function(){
+               img.src = "";
+               wrapper.classList.remove("active");
+             })
+            reader.readAsDataURL(file);
+            //  url = URL.createObjectURL(file);
+            url = file;
+            
+           }
+           if(this.value){
+             let valueStore = this.value.match(regExp);
+             fileName.textContent = valueStore;
+           }
+         });
+         
+         document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('button[id="get-age"]').forEach(button => {
+                    button.onclick = () => {
+                        const request = new XMLHttpRequest();
+                        
+                        request.open('POST', `/${button.id}`, true);
+                        img1 = url;
+                        request.send(img1);
+                        request.onload = () => {
+                           const response = request.responseText;
+                           const reader = new FileReader();
+
+                           reader.onload = function(){
+                              img.src = response;
+                              wrapper.classList.add("active");
+                              document.getElementById('name').innerHTML = response;
+                              }
+                           
+                           reader.readAsDataURL(url);
+                           
+                        }; 
+                        
+                     
+
+                    };
+                });
+            });
+
+      </script>
+   </body>
+</html>
