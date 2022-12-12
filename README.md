@@ -1,16 +1,16 @@
 
 # Age estimation
 
-This is a fork age prediction project from [nhshin-mcl/MWR]('https://github.com/nhshin-mcl/MWR').
+This is a fork age prediction project from [nhshin-mcl/MWR](https://github.com/nhshin-mcl/MWR).
 
 
 
 
 ## Run
 
-Notebook: [Google Colab]('https://colab.research.google.com/drive/1Iq8CoaeHzKQpvvlWcT3ptJvlcFNSzYnR?usp=sharing')
+Notebook: [Google Colab](https://colab.research.google.com/drive/1Iq8CoaeHzKQpvvlWcT3ptJvlcFNSzYnR?usp=sharing)
 
-Run demo: VGG ``app1.py``, MWR ``app2.py``
+Run demo in `demo`: VGG ``app1.py``, MWR ``app2.py``
 ```bash
   python app1.py
 ```
