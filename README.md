@@ -32,11 +32,11 @@ Contributions:
 - We provide ``gen_triplet.py`` to create triplet, then train P-regressor using ``Train.py``.
 - We also provide ``preprocessing.py`` to detect and crop face from original data
 
-## Result
+## Result on UTK Face
 
 | Model      | MAE |
 | ----------- | ----------- |
 | MWR (random)      | 4.63       |
 | VGG16   |  4.656        |
 
-We re-train VGG that was trained on predicting p-rank for faster convergence.
+We finetuned VGG that was trained on predicting p-rank for faster convergence.
